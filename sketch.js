@@ -5,14 +5,33 @@ var score;
 var numberOfStaticsHit = 0;
 var recentScores;
 var userClicks = [];
+var greeting, button, input;
+var hasGameStarted = false;
 
 function setup() {
-  createCanvas(1920,1080);
-  recentScores = new RecentScores();
+  createCanvas(windowWidth,windowHeight);
+  background(0);
+
+
+  input = createInput();
+  input.position(width/2-250, height/2);
+
+  button = createButton('Play');
+  button.position(width/2-250, height/2+80);
+  button.mousePressed(userHasInputName);
+}
+
+function userHasInputName() {
+  button.style("visibility", "hidden");
+  input.style("visibility", "hidden");
+  hasGameStarted = true;
+  recentScores = new RecentScores(input.value());
+
   restartGame();
 }
 
 function restartGame() {
+  console.log("Start game called");
   movingTarget = new MovingTarget();
   movingTarget.hide();
   target = new Target();
@@ -22,34 +41,36 @@ function restartGame() {
 
 
 function draw() {
-  background(0);
-  target.display();
-  aimTimer.display();
-  score.display();
+  console.log("game started" + hasGameStarted);
+  if (hasGameStarted) {
+    background(0);
+    target.display();
+    aimTimer.display();
+    score.display();
 
-  movingTarget.display();
-  movingTarget.update();
-  movingTarget.constrain();
-  recentScores.display();
+    movingTarget.display();
+    movingTarget.update();
+    movingTarget.constrain();
+    recentScores.display();
 
-  if (!movingTarget.isVisible) {
-    this.target.show();
-  }
-
-  if (frameCount % 60 == 0) {
-    aimTimer.time--;
-    if (aimTimer.time <= 0) {
-      recentScores.addScore(score.score);
-      restartGame();
+    if (!movingTarget.isVisible) {
+      this.target.show();
     }
+
+    if (frameCount % 60 == 0) {
+      aimTimer.time--;
+      if (aimTimer.time <= 0) {
+        recentScores.addScore(score.score);
+        restartGame();
+      }
+    }
+    displayUserClicks();
+
   }
 
-
-  displayUserClicks();
 }
 
 function displayUserClicks() {
-  console.log(userClicks.length);
   for (var i = userClicks.length-1; i >= 0; i--) {
     userClicks[i].update();
     userClicks[i].display();
@@ -60,17 +81,15 @@ function displayUserClicks() {
 }
 function mousePressed() {
 
-  var hasHitStaticTarget = processUserClickedStaticTarget();
+  if (hasGameStarted) {
+    var hasHitStaticTarget = processUserClickedStaticTarget();
 
-  var hasHitMovingTarget = processUserClickedMovingTarget();
+    var hasHitMovingTarget = processUserClickedMovingTarget();
 
-
-  if (!hasHitStaticTarget && !hasHitMovingTarget) {
-
-
-    processedMissedTarget();
+    if (!hasHitStaticTarget && !hasHitMovingTarget) {
+      processedMissedTarget();
+    }
   }
-
 }
 
 
