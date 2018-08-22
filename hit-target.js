@@ -8,17 +8,17 @@ function HitTarget(x, y, increment) {
 
   this.isVisible = true;
   this.update = function() {
-    this.displayCounter++;
-    if (this.displayCounter > 20) {
+    this.displayCounter +=5;
+    if (this.displayCounter >= 255) {
       console.log(this.displayCounter);
       this.isVisible = false;
     }
   }
 
   this.display = function() {
-    fill(100, 255, 100);
+    fill(100, 255, 100, 255-this.displayCounter);
     textSize(30);
-    text("+ "+increment, this.x, this.y);
+    text("+ "+this.increment, this.x, this.y);
   }
 
 }

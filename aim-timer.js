@@ -3,7 +3,7 @@ function AimTimer() {
 
   this.x = width/2;
   this.y = 100;
-  this.time = 15;
+  this.time = 30;
 
   this.display = function() {
 

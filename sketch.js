@@ -1,12 +1,15 @@
-var target;
-var movingTarget;
-var aimTimer;
-var score;
-var numberOfStaticsHit = 0;
-var recentScores;
-var userClicks = [];
-var greeting, button, input;
-var hasGameStarted = false;
+let aimTimer;
+let score;
+let numberOfStaticsHit = 0;
+let recentScores;
+let userClicks = [];
+let greeting, button, input;
+let hasGameStarted = false;
+let numberOfClicksWhileGameStarted = 0;
+const NUMBER_OF_TARGETS = 5;
+
+let targets = [];
+
 
 function setup() {
   createCanvas(windowWidth,windowHeight);
@@ -31,31 +34,39 @@ function userHasInputName() {
 }
 
 function restartGame() {
-  console.log("Start game called");
-  movingTarget = new MovingTarget();
-  movingTarget.hide();
-  target = new Target();
+  for (let i = 0; i < NUMBER_OF_TARGETS; i++) {
+    let hasDone = false
+    while(!hasDone) {
+      let newTarget = new Target(i, targets);
+      hasDone = newTarget.hasFoundTargetPosition(i);
+    }
+  }
+
   aimTimer = new AimTimer();
   score = new Score();
+
 }
 
 
 function draw() {
-  console.log("game started" + hasGameStarted);
   if (hasGameStarted) {
     background(0);
-    target.display();
+
     aimTimer.display();
     score.display();
-
-    movingTarget.display();
-    movingTarget.update();
-    movingTarget.constrain();
     recentScores.display();
 
-    if (!movingTarget.isVisible) {
-      this.target.show();
+    for (let i = 0; i < NUMBER_OF_TARGETS; i++) {
+      if (targets[i].hasRespawned) {
+        userClicks.push(new MissedTarget(targets[i].previousPos.x, targets[i].previousPos.y, 3));
+        score.score -= 3;
+
+      }
+      targets[i].update();
+      targets[i].display();
+
     }
+
 
     if (frameCount % 60 == 0) {
       aimTimer.time--;
@@ -71,7 +82,7 @@ function draw() {
 }
 
 function displayUserClicks() {
-  for (var i = userClicks.length-1; i >= 0; i--) {
+  for (let i = userClicks.length-1; i >= 0; i--) {
     userClicks[i].update();
     userClicks[i].display();
     if (!userClicks[i].isVisible) {
@@ -80,22 +91,23 @@ function displayUserClicks() {
   }
 }
 function mousePressed() {
-
+  console.log(hasGameStarted);
   if (hasGameStarted) {
-    var hasHitStaticTarget = processUserClickedStaticTarget();
-
-    var hasHitMovingTarget = processUserClickedMovingTarget();
-
-    if (!hasHitStaticTarget && !hasHitMovingTarget) {
+    numberOfClicksWhileGameStarted++;
+  }
+  if (numberOfClicksWhileGameStarted > 1) {
+    let hasHitStaticTarget = processUserClickedStaticTarget();
+    if (!hasHitStaticTarget) {
       processedMissedTarget();
     }
   }
+
 }
 
 
 function processUserClickedMovingTarget() {
-  var hasHitATarget = false;
-  var distance = dist(mouseX, mouseY, movingTarget.pos.x, movingTarget.pos.y);
+  let hasHitATarget = false;
+  let distance = dist(mouseX, mouseY, movingTarget.pos.x, movingTarget.pos.y);
   if (distance < movingTarget.r) {
     hasHitATarget = true;
     score.score += 8;
@@ -108,25 +120,23 @@ function processUserClickedMovingTarget() {
 
 
 function processUserClickedStaticTarget() {
-  var distance = dist(mouseX, mouseY, target.pos.x, target.pos.y);
-  var hasHitATarget = false;
-  if (distance < target.r) {
-    hasHitATarget = true;
-    userClicks.push(new HitTarget(mouseX, mouseY, 10));
-    score.score+=10;
-    target.respawn();
-    numberOfStaticsHit++;
-    if (numberOfStaticsHit % 5 == 0) {
-      movingTarget = new MovingTarget();
-      target.hide();
+  let hasHitATarget = false;
+  for (let i = 0; i < NUMBER_OF_TARGETS; i++) {
+    let distance = dist(mouseX, mouseY, targets[i].pos.x, targets[i].pos.y);
+    if (distance < targets[i].r) {
+      hasHitATarget = true;
+      console.log(targets[i].timeAlive);
+      userClicks.push(new HitTarget(mouseX, mouseY, Math.floor(600/targets[i].timeAlive)));
+      score.score+= Math.floor(600/targets[i].timeAlive);
+      targets[i].respawn(true);
+      numberOfStaticsHit++;
     }
   }
-
   return hasHitATarget;
 }
 
 
 function processedMissedTarget() {
   score.score -= 5;
-  userClicks.push(new MissedTarget(mouseX, mouseY));
+  userClicks.push(new MissedTarget(mouseX, mouseY, 5));
 }

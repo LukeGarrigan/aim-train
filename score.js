@@ -8,6 +8,4 @@ function Score() {
     text(this.score, width-100, 100);
   }
 
-
-
 }
